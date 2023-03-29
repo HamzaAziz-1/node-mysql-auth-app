@@ -3,7 +3,7 @@ import { isAuthenticated } from "../auth";
 import Layout from "../core/Layout";
 import { Link } from "react-router-dom";
 const Dashboard = () => {
-    const { user: { _id, name, email, role } } = isAuthenticated();
+    const { user: { name, email, state } } = isAuthenticated();
     const userLinks = () => {
         return (
           <div className="card text-center">
@@ -37,7 +37,7 @@ const Dashboard = () => {
                 <ul className="list-group">
                     <li className="list-group-item">{name}</li>
                     <li className="list-group-item">{email}</li>
-                    <li className="list-group-item">{role === 1 ? 'Admin' : 'Registered User'}</li>
+                    <li className="list-group-item">{state}</li>
                 </ul>
             </div>
         );

@@ -115,5 +115,13 @@ router.post('/signup', (req, res) => {
   });
 });
 
+router.post("/signout", (req, res) => {
+  // Clear the JWT token from the client-side cookie or local storage
+  res.clearCookie("token");
+  // send a success message
+  res.status(200).json({ message: "Signout successful" });
+});
+
+
 
 module.exports = router;

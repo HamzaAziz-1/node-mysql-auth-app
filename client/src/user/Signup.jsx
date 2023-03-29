@@ -2,17 +2,18 @@ import React,{useState} from "react";
 import Layout from "../core/Layout";
 import { Link } from "react-router-dom";
 import { signup } from "../auth";
-
+import StateDropdown from "./StateDropdown";
 const Signup = () => {
     const [values, setValues] = useState({
         name: '',
         email: '',
         password: '',
+        state:'',
         error: '',
         success: false
     });
 
-    const { name, email, password,success,error } = values;
+    const { name, email, password,state,success,error } = values;
 
     const handleChange = name => event => {
         setValues({ ...values, error: false, [name]: event.target.value });
@@ -24,7 +25,7 @@ const Signup = () => {
     const clickSubmit = (event) => {
         event.preventDefault();
         setValues({ ...values, error: false });
-        signup({ name, email, password })
+        signup({ name, email, password,state })
             .then(data => {
                 if (data.error) {
                     setValues({ ...values, error: data.error, success: false })
@@ -35,6 +36,7 @@ const Signup = () => {
                         name: '',
                         email: '',
                         password: '',
+                        state:'',
                         error: '',
                         success: true
                     });
@@ -70,14 +72,22 @@ const Signup = () => {
             className="form-control"
             value={password}
           />
-            </div>
-            <div className="text-center">
-
-        <button onClick={clickSubmit} className="mt-3 btn btn-outline-danger ">
-          {" "}
-          Register
-        </button>
-            </div>
+        </div>
+        <div className="form-group">
+          <label className="text font-weight-bold">
+            State:
+            <StateDropdown value={state} onChange={handleChange("state")} />
+          </label>
+        </div>
+        <div className="text-center">
+          <button
+            onClick={clickSubmit}
+            className="mt-3 btn btn-outline-danger "
+          >
+            {" "}
+            Register
+          </button>
+        </div>
       </form>
     );
 

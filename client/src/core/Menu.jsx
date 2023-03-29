@@ -17,15 +17,15 @@ const Menu = ({ history }) => (
     
   <div>
     <ul className=" nav nav-dark bg-dark justify-content-center">
-      <li className="nav-item ">
+      {/* <li className="nav-item ">
         <Link className="nav-link" to="/" style={isActive(history, "/")}>
           Home{" "}
         </Link>
-      </li>
+      </li> */}
 
     
 
-      {isAuthenticated() && isAuthenticated().user.role === 0 && (
+      {isAuthenticated() && (
         <li className="nav-item ml-4">
           <Link
             className="nav-link"
@@ -37,17 +37,7 @@ const Menu = ({ history }) => (
         </li>
       )}
 
-      {isAuthenticated() && isAuthenticated().user.role === 1 && (
-        <li className="nav-item ml-4">
-          <Link
-            className="nav-link"
-            to="/admin/dashboard"
-            style={isActive(history, "/admin/dashboard")}
-          >
-            Dashboard{" "}
-          </Link>
-        </li>
-      )}
+      
       {!isAuthenticated() && (
         <Fragment>
           <li className="nav-item ml-4">

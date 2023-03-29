@@ -26,22 +26,22 @@ const Signin = () => {
         event.preventDefault();
         setValues({ ...values, error: false ,loading:true});
         signin({ email, password })
-            .then(data => {
-                if (data.error) {
-                    setValues({ ...values, error: data.error, loading: false })
-                }
-                else {
-                    authenticate(
-                        data,
-                        () => {
-                            setValues({
-                                ...values,
-                                redirect: true
-                            });
-                        }
-                )    
-                }
-            });
+          .then((data) => {
+            if (data.error) {
+              setValues({ ...values, error: data.error, loading: false });
+            } else {
+              authenticate(data, () => {
+                setValues({
+                  ...values,
+                  redirect: true,
+                });
+              });
+            }
+          })
+          .catch((err) =>
+            setValues({ ...values, error: err, loading: false,redirect:false })
+          );
+        
     };
 
     const signUpForm = () => (
@@ -89,22 +89,14 @@ const Signin = () => {
 
     const redirectUser = () => {
         if (redirect) {
-            if (user && user.role === 1) {
-                return <Redirect to={'/admin/dashboard'} />
-            }
-            else
-            {
                 return <Redirect to={'user/dashboard'} />
-                
-                }
+                               
             }
-            if (isAuthenticated()){
-                return <Redirect to={'/'} />;
-            };
+           
     };
 
     return (
-        <Layout title="Sign In Page" description="Sign In to Online Shopping Website" className="container col-md-5 text-align-centre">
+        <Layout title="Sign In Page" description="Sign In to the Website" className="container col-md-5 text-align-centre">
             {redirectUser()}
             {showLoading()}
             {showError()}
