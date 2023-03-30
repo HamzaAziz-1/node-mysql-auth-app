@@ -1,43 +1,27 @@
-import React,{Fragment} from "react";
+import React, { Fragment } from "react";
 import { Link, withRouter } from "react-router-dom";
-import { signout,isAuthenticated } from "../auth";
-
+import { signout, isAuthenticated } from "./auth";
 
 const isActive = (history, path) => {
-    if (history.location.pathname === path) {
-        return { color: "#C9CCD5" };
-    }
-    else {
-        return { color: '#ffffff' }
-    }
-       
+  if (history.location.pathname === path) {
+    return { color: "#C9CCD5" };
+  } else {
+    return { color: "#ffffff" };
+  }
 };
- 
+
 const Menu = ({ history }) => (
-    
   <div>
     <ul className=" nav nav-dark bg-dark justify-content-center">
-      {/* <li className="nav-item ">
+      <li className="nav-item ">
         <Link className="nav-link" to="/" style={isActive(history, "/")}>
           Home{" "}
         </Link>
-      </li> */}
+      </li>
 
     
 
-      {isAuthenticated() && (
-        <li className="nav-item ml-4">
-          <Link
-            className="nav-link"
-            to="/user/dashboard"
-            style={isActive(history, "/user/dashboard")}
-          >
-            Dashboard{" "}
-          </Link>
-        </li>
-      )}
-
-      
+     
       {!isAuthenticated() && (
         <Fragment>
           <li className="nav-item ml-4">
@@ -79,8 +63,7 @@ const Menu = ({ history }) => (
         </Fragment>
       )}
     </ul>
-    </div>
-    
+  </div>
 );
 
 export default withRouter(Menu);

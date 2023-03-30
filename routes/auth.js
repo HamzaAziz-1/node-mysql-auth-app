@@ -15,7 +15,7 @@ const connection = mysql.createConnection({
 //regex for validating inputs
 const nameRegex = /^[a-zA-Z]{2,}(?: [a-zA-Z]+){0,2}$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/;
+// const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/;
 
 
 // example route that requires authentication
@@ -90,16 +90,32 @@ router.post('/signup', (req, res) => {
   // validate inputs using regex patterns
   const validName = nameRegex.test(name);
   const validEmail = emailRegex.test(email);
-  const validPassword = passwordRegex.test(password);
+  // const validPassword = passwordRegex.test(password);
 
-  if (!validName || !validEmail || !validPassword) {
+  if (!validName) {
     // send error response if any input is invalid
-    res.status(400).json({
-      message: 'Invalid input'
+    return res.status(400).json({
+      error: "Invalid name",
     });
-    return;
+    
   }
+    if (!validEmail)
+    {
+      return res.status(400).json({
+        error: "Invalid email",
+      });
+      
+    }
+    
+    // if (!validPassword)
+    // {
+    //   return res.status(400).json({
+    //     error: "Invalid password",
+    //   });
+      
+    // }
 
+   
   // hash password
   bcrypt.hash(password, 10, function(err, hash) {
     if (err) throw err;
@@ -108,7 +124,7 @@ router.post('/signup', (req, res) => {
     connection.query('INSERT INTO users (name, email, password, state) VALUES (?, ?, ?, ?)', [name, email, hash, state], function (error, results, fields) {
       if (error) throw error;
 
-      res.status(201).json({
+      return res.status(201).json({
         message: 'User created successfully'
       });
     });
@@ -121,7 +137,5 @@ router.post("/signout", (req, res) => {
   // send a success message
   res.status(200).json({ message: "Signout successful" });
 });
-
-
 
 module.exports = router;
