@@ -32,7 +32,7 @@ router.post("/login", (req, res) => {
 
   // check for empty fields
   if (!email || !password) {
-    return res.status(400).json({ message: "Please enter email and password" });
+    return res.status(400).json({ error: "Please enter email and password" });
     }
     
   // check if email exists in database
@@ -62,14 +62,14 @@ router.post("/login", (req, res) => {
           } else {
             // password incorrect
             res.status(401).json({
-              message: "Invalid email or password",
+              error: "Invalid email or password",
             });
           }
         });
       } else {
         // email not found
         res.status(401).json({
-          message: "Invalid email or password",
+          error: "Invalid email or password",
         });
       }
     }
@@ -77,59 +77,62 @@ router.post("/login", (req, res) => {
 });
 
 // signup route
-router.post('/signup', (req, res) => {
+router.post("/signup", (req, res) => {
   const name = req.body.name;
   const email = req.body.email;
   const password = req.body.password;
   const state = req.body.state;
 
-  //Check if all fields are filled
+  // Check if all fields are filled
   if (!name || !email || !password || !state) {
     return res.status(400).json({ message: "Please enter all fields" });
-  }  
-  // validate inputs using regex patterns
+  }
+
+  // Validate inputs using regex patterns
   const validName = nameRegex.test(name);
   const validEmail = emailRegex.test(email);
-  // const validPassword = passwordRegex.test(password);
 
   if (!validName) {
-    // send error response if any input is invalid
-    return res.status(400).json({
-      error: "Invalid name",
-    });
-    
+    // Send error response if any input is invalid
+    return res.status(400).json({ error: "Invalid name" });
   }
-    if (!validEmail)
-    {
-      return res.status(400).json({
-        error: "Invalid email",
+
+  if (!validEmail) {
+    return res.status(400).json({ error: "Invalid email" });
+  }
+
+  // Query the database to check if email already exists
+  connection.query(
+    "SELECT * FROM users WHERE email = ?",
+    [email],
+    function (error, results, fields) {
+     
+      // If a user with the email already exists, send an error response
+      if (results.length > 0) {
+        return res.status(400).json({ error: "Email already in use" });
+      }
+
+      // Hash password
+      bcrypt.hash(password, 10, function (err, hash) {
+        if (err) throw err;
+
+        // Save user to database
+        connection.query(
+          "INSERT INTO users (name, email, password, state) VALUES (?, ?, ?, ?)",
+          [name, email, hash, state],
+          function (error, results, fields) {
+            if (error) throw error;
+
+            return res
+              .status(201)
+              .json({ message: "User created successfully" });
+          }
+        );
       });
-      
     }
-    
-    // if (!validPassword)
-    // {
-    //   return res.status(400).json({
-    //     error: "Invalid password",
-    //   });
-      
-    // }
-
-   
-  // hash password
-  bcrypt.hash(password, 10, function(err, hash) {
-    if (err) throw err;
-
-    // save user to database
-    connection.query('INSERT INTO users (name, email, password, state) VALUES (?, ?, ?, ?)', [name, email, hash, state], function (error, results, fields) {
-      if (error) throw error;
-
-      return res.status(201).json({
-        message: 'User created successfully'
-      });
-    });
-  });
+  );
 });
+
 
 router.post("/signout", (req, res) => {
   // Clear the JWT token from the client-side cookie or local storage

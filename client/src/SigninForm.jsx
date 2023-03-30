@@ -24,8 +24,8 @@ const clickSubmit = (event) => {
   setValues({ ...values, error: false, loading: true });
   signin({ email, password }).then((data) => {
     console.log(data);
-    if (data.message) {
-      setValues({ ...values, error: data.message, loading: false });
+    if (data.error) {
+      setValues({ ...values, error: data.error, loading: false });
     } else {
       authenticate(data, () => {
         setValues({
@@ -59,9 +59,9 @@ const clickSubmit = (event) => {
              value={password}
            />
          </div>
-         {error && <div style={{ color: "red" }}>{error}</div>}
+         {/* {error && <div style={{ color: "red" }}>{error}</div>} */}
          <div className="text-center">
-           <button onClick={clickSubmit}className="mt-3 btn btn-outline-dark ">
+           <button onClick={clickSubmit} className="mt-3 btn btn-outline-dark ">
              {" "}
              Sign In
            </button>

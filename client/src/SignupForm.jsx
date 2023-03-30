@@ -95,7 +95,8 @@ const SignupForm = () => {
       setState('');
     } catch (error) {
       // Display error message
-      setErrorMessage('An error occurred while creating the user.');
+      console.log(error.response.data);
+      setErrorMessage(error.response.data.error);
       setSuccessMessage('');
     }
   };
