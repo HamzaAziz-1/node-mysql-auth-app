@@ -60,6 +60,20 @@ const Menu = ({ history }) => (
               SignOut{" "}
             </span>
           </li>
+          <li className="nav-item ml-4">
+            <span
+              className="nav-link "
+              style={{ cursor: "pointer", color: "#ffffff" }}
+              onClick={() => {
+              
+                history.push("/dashboard");
+               
+              }
+              }
+            >
+              Dashboard{" "}
+            </span>
+          </li>
         </Fragment>
       )}
     </ul>

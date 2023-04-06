@@ -26,11 +26,10 @@ export const isAuthenticated = () => {
     return false;
   }
   if (localStorage.getItem("jwt")) {
-    return true;
-  } else {
-    return false;
-  }
+    return JSON.parse(localStorage.getItem("jwt"));
+  } else return false;
 };
+
 
 export const signout = async (next) => {
   if (typeof window !== "undefined") {

@@ -85,7 +85,7 @@ const clickSubmit = (event) => {
       );
      const redirectUser = () => {
        if (isAuthenticated()) {
-         return <Redirect to={"/home"} />;
+         return <Redirect to={"/dashboard"} />;
        }
      };
 

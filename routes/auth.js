@@ -133,6 +133,42 @@ router.post("/signup", (req, res) => {
   );
 });
 
+// middleware function to verify JWT token
+function verifyToken(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const token = authHeader.split(" ")[1];
+  jwt.verify(token, "secret-key", function (err, decoded) {
+    if (err) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    req.userId = decoded.userId;
+    next();
+  });
+}
+
+// route to get user details
+router.get("/user", verifyToken, function (req, res) {
+  const userId = req.userId;
+  connection.query(
+    "SELECT * FROM users WHERE id = ?",
+    [userId],
+    function (error, results, fields) {
+      if (error) throw error;
+      if (results.length > 0) {
+        const user = results[0];
+        res.status(200).json(user);
+      } else {
+        res.status(404).json({ error: "User not found" });
+      }
+    }
+  );
+});
+
+
 
 router.post("/signout", (req, res) => {
   // Clear the JWT token from the client-side cookie or local storage
