@@ -18,7 +18,7 @@ const Myroutes = () => {
         <Route path="/dashboard" exact component={Dashboard} />
         <Route path="/add-transactions" exact component={InputTransactions} />
         <Route path="/show-transactions" exact component={ShowTransactions} />
-        <Route path="/update-transactions" exact component={UpdateTransactions} />
+        <Route path="/update-transactions/:id" exact component={UpdateTransactions} />
       </Switch>
     </BrowserRouter>
   );

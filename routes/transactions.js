@@ -229,6 +229,11 @@ router.put("/update/:id", (req, res) => {
     lender_contact_phone_number,
   } = req.body;
 
+  const sliced_closing_date = closing_date.slice(0, 10);
+  const sliced_deadline_after_emd_accepted = deadline_after_emd_accepted.slice(
+    0,
+    10
+  );
   const sql = `UPDATE transactions SET 
                 mls_vendor = ?,
                 mls_number = ?,
@@ -274,10 +279,10 @@ router.put("/update/:id", (req, res) => {
     lot,
     block,
     current_sales_price,
-    closing_date,
+    sliced_closing_date,
     earnest_money_company_name,
     earnest_money_amount,
-    deadline_after_emd_accepted,
+    sliced_deadline_after_emd_accepted,
     transaction_listing_notes,
     buyer_agent_name,
     buyer_agent_email,

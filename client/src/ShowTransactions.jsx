@@ -47,7 +47,10 @@ const ShowTransactions = () => {
               <tr key={transaction.id}>
                 <td>{transaction.id}</td>
                 <td>
-                  <Link className="nav-link" to={"/update-transactions"}>
+                  <Link
+                    className="nav-link"
+                    to={`/update-transactions/${transaction.id}`}
+                  >
                     <Button variant="outline-success">Update</Button>
                   </Link>
                 </td>

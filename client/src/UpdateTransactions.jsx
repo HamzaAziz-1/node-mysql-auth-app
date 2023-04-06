@@ -7,6 +7,7 @@ import Col from "react-bootstrap/Col";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import Row from "react-bootstrap/Row";
+import { useParams,useHistory } from "react-router-dom";
 
 const UpdateTransactions = () => {
   const [name, setName] = useState("");
@@ -67,6 +68,8 @@ const UpdateTransactions = () => {
     "Wisconsin",
     "Wyoming",
   ];
+  const history = useHistory();
+
   const [formValues, setFormValues] = useState({
     mls_vendor: "",
     mls_number: "",
@@ -101,7 +104,8 @@ const UpdateTransactions = () => {
     lender_contact_email: "",
     lender_contact_phone_number: "",
   });
-
+    const transactionId = useParams().id;
+    console.log("Id is"+transactionId);
   const handleChange = (event) => {
     setFormValues({
       ...formValues,
@@ -132,6 +136,24 @@ const UpdateTransactions = () => {
     };
     fetchUser();
   }, []);
+  useEffect(() => {
+    // Fetch the current user's information and update the form fields
+    
+      axios
+      .get(`http://localhost:8000/transaction/show/${transactionId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((response) => {
+        setFormValues(response.data);
+        console.log(response.data);
+      })
+      .catch((error) => {
+        console.log(error);
+        setErrorMessage(error.response.data.error);
+      });
+  }, []);
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -143,53 +165,20 @@ const UpdateTransactions = () => {
 
     setValidated(true);
     axios
-      .post("http://localhost:8000/transaction/inputs", formValues)
+      .put(`http://localhost:8000/transaction/update/${transactionId}`, formValues, {
+        headers: { Authorization: `Bearer ${token}` }, // send the token through the headers
+      })
       .then((response) => {
-        console.log(response.data);
-        // Reset formValues
-        setFormValues({
-          mls_vendor: "",
-          mls_number: "",
-          street_address: "",
-          city: "",
-          state: "",
-          property_tax_id_number: "",
-          lot: "",
-          block: "",
-          current_sales_price: "",
-          closing_date: "",
-          earnest_money_company_name: "",
-          earnest_money_amount: "",
-          deadline_after_emd_accepted: "",
-          transaction_listing_notes: "",
-          buyer_agent_name: "",
-          buyer_agent_email: "",
-          buyer_name: "",
-          buyer_email_address: "",
-          buyer_phone_number: "",
-          buyer_current_address: "",
-          seller_transaction_coordinator_first_name: "",
-          seller_transaction_coordinator_last_name: "",
-          seller_transaction_coordinator_email: "",
-          seller_transaction_coordinator_phone_number: "",
-          title_contact_first_name: "",
-          title_contact_last_name: "",
-          title_contact_company: "",
-          title_contact_phone_number: "",
-          lender_contact_first_name: "",
-          lender_contact_last_name: "",
-          lender_contact_email: "",
-          lender_contact_phone_number: "",
-        });
-        setSuccessMessage("Inputs added successfully!");
-        setErrorMessage("");
+        console.log(response);
+        setSuccessMessage("Transaction updated successfully");
+        history.push("/show-transactions");
       })
       .catch((error) => {
-        console.log(error);
-        console.log(formValues);
+        console.log(error.response.data);
         setErrorMessage(error.response.data.error);
-        setSuccessMessage("");
+
       });
+    
   };
   const handleMakeMeTheAgent = () => {
     setFormValues({
@@ -199,45 +188,6 @@ const UpdateTransactions = () => {
     });
   };
 
-  // const updateForm = () => (
-  //   <Form onSubmit={handleSubmit}>
-  //     <div className="form-group mt-5 pt-5">
-  //       <Form.Label className="text font-weight-bold">MLS Vendor</Form.Label>
-  //       <Form.Select aria-label="Default select example">
-  //         <option>Select MLS Vendor</option>
-  //         <option value="1">HAR</option>
-  //         <option value="2">Zillow</option>
-  //       </Form.Select>
-  //     </div>
-  //     <div className="form-group">
-  //       <label className="text font-weight-bold">Email</label>
-  //       <input
-  //         onChange={(event) => setEmail(event.target.value)}
-  //         type="email"
-  //         className="form-control"
-  //         value={email}
-  //       />
-  //     </div>
-  //     {/* <div className="form-group">
-  //       <label className="text font-weight-bold">Password</label>
-  //       <input
-  //         onChange={(event) => setPassword(event.target.value)}
-  //         type="password"
-  //         className="form-control"
-  //         value={password}
-  //       />
-  //     </div> */}
-
-  //     <div className="text-center">
-  //       <button type="submit" className="mt-3 btn btn-outline-danger ">
-  //         {" "}
-  //         Update
-  //       </button>
-  //     </div>
-  //     {errorMessage && <div style={{ color: "red" }}>{errorMessage}</div>}
-  //     {successMessage && <div style={{ color: "green" }}>{successMessage}</div>}
-  //   </Form>
-  // );
 
   const transactionForm = () => (
     <Form noValidate validated={validated} onSubmit={handleSubmit}>
@@ -251,6 +201,7 @@ const UpdateTransactions = () => {
         >
           <Form.Label className="text">MLS Vendor</Form.Label>
           <Form.Select
+            
             value={formValues.mls_vendor}
             onChange={handleChange}
             name="mls_vendor"
@@ -428,7 +379,7 @@ const UpdateTransactions = () => {
             type="date"
             placeholder="Closing Date"
             name="closing_date"
-            value={formValues.closing_date}
+            value={formValues.closing_date.slice(0, 10)}
             required
             onChange={handleChange}
           />
@@ -498,7 +449,7 @@ const UpdateTransactions = () => {
             placeholder="Deadline After EMD Accepted"
             required
             name="deadline_after_emd_accepted"
-            value={formValues.deadline_after_emd_accepted}
+            value={formValues.deadline_after_emd_accepted.slice(0, 10)}
             onChange={handleChange}
           />
           <Form.Control.Feedback type="invalid">
@@ -941,8 +892,8 @@ const UpdateTransactions = () => {
         </Form.Group>
       </Row>
       <div className="text-center mt-5 mb-5">
-        <Button variant="dark" type = "submit">
-          Submit
+        <Button variant="dark" type="submit">
+          Update
         </Button>
       </div>
 
