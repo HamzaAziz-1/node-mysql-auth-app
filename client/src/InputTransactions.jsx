@@ -136,6 +136,15 @@ const InputTransactions = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
+     if (formValues.mls_vendor === "Select MLS Vendor") {
+       setErrorMessage("Please select an MLS Vendor");
+       return;
+    }
+     if (formValues.state === "Select State") {
+       setErrorMessage("Please select a state");
+       return;
+     }
+    
     const form = event.currentTarget;
     if (form.checkValidity() === false) {
       event.preventDefault();
@@ -222,6 +231,11 @@ const InputTransactions = () => {
             <option value="1">HAR</option>
             <option value="2">Zillow</option>
           </Form.Select>
+          {errorMessage && (
+            <div style={{ color: "red" }} className="error-message">
+              {errorMessage}
+            </div>
+          )}
         </Form.Group>
         <Form.Group
           as={Col}
@@ -277,10 +291,9 @@ const InputTransactions = () => {
             Please provide a valid city.
           </Form.Control.Feedback>
         </Form.Group>
-        <Form.Group as={Col} md="4" controlId="validationCustom04" name="state">
+        <Form.Group as={Col} md="4"  name="state">
           <Form.Label>State</Form.Label>
           <Form.Select
-            aria-label="Default select example"
             onChange={handleChange}
             className="mt-2 mb-2"
             value={formValues.state}
@@ -293,6 +306,11 @@ const InputTransactions = () => {
               </option>
             ))}
           </Form.Select>
+          {errorMessage && (
+            <div style={{ color: "red" }} className="error-message">
+              {errorMessage}
+            </div>
+          )}
         </Form.Group>
         <Form.Group
           as={Col}
@@ -903,7 +921,7 @@ const InputTransactions = () => {
         </Form.Group>
       </Row>
       <div className="text-center mt-5 mb-5">
-        <Button variant="dark" type = "submit">
+        <Button variant="dark" type="submit">
           Submit
         </Button>
       </div>
