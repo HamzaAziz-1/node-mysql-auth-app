@@ -2,6 +2,7 @@ const express = require("express");
 const mysql = require("mysql");
 const router = express.Router();
 const { checkAuth } = require("../middlewares/auth.js");
+const jwt = require("jsonwebtoken");
 
 
 // create connection to mysql database
@@ -12,7 +13,25 @@ const connection = mysql.createConnection({
   database: process.env.database,
 });
 
-router.post("/inputs", (req, res) => {
+// middleware function to verify JWT token
+function verifyToken(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const token = authHeader.split(" ")[1];
+  jwt.verify(token, "secret-key", function (err, decoded) {
+    if (err) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    req.userId = decoded.userId;
+    next();
+  });
+}
+
+router.post("/inputs",verifyToken, (req, res) => {
+  const user_id = req.userId;
   const {
     mls_vendor,
     mls_number,
@@ -85,7 +104,8 @@ router.post("/inputs", (req, res) => {
     return res.status(400).json({ error: "Missing required input." });
   }
 
-  const sql = `INSERT INTO transactions (
+  const sql = `INSERT INTO transaction (
+    user_id,
     mls_vendor,
     mls_number,
     street_address,
@@ -118,9 +138,10 @@ router.post("/inputs", (req, res) => {
     lender_contact_last_name,
     lender_contact_email,
     lender_contact_phone_number
-  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)`;
+  ) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)`;
 
   const values = [
+    user_id,
     mls_vendor,
     mls_number,
     street_address,
@@ -159,14 +180,15 @@ router.post("/inputs", (req, res) => {
     if (err) {
       return res.status(400).json({ err });
     } else {
-      console.log(result);
+      
         return res.status(200).json("Transactions created successfully");
     }
   });
 });
-router.get("/showAll", (req, res) => {
-  const sql = "SELECT * FROM transactions";
-  connection.query(sql, (err, result) => {
+router.get("/showAll",verifyToken, (req, res) => {
+  const user_id = req.userId;
+  const sql = "SELECT * FROM transaction WHERE user_id = ?";
+  connection.query(sql,[user_id], (err, result) => {
     if (err) {
       return res.status(400).json({ err });
     } else {
@@ -175,11 +197,12 @@ router.get("/showAll", (req, res) => {
   });
 });
 
-router.get("/show/:id", (req, res) => {
+router.get("/show/:id", verifyToken,(req, res) => {
   const transactionId = req.params.id;
-  const sql = "SELECT * FROM transactions WHERE id = ?";
+  const userId = req.userId;
+  const sql = "SELECT * FROM transaction WHERE id = ? AND user_id = ?";
 
-  connection.query(sql, [transactionId], (err, result) => {
+  connection.query(sql, [transactionId, userId], (err, result) => {
     if (err) {
       return res.status(400).json({ error: err.message });
     }
@@ -192,8 +215,9 @@ router.get("/show/:id", (req, res) => {
   });
 });
 
-router.put("/update/:id", (req, res) => {
+router.put("/update/:id", verifyToken, (req, res) => {
   const { id } = req.params;
+  const userId = req.userId;
   const {
     mls_vendor,
     mls_number,
@@ -234,7 +258,8 @@ router.put("/update/:id", (req, res) => {
     0,
     10
   );
-  const sql = `UPDATE transactions SET 
+  
+  const sql = `UPDATE transaction SET 
                 mls_vendor = ?,
                 mls_number = ?,
                 street_address = ?,
@@ -267,7 +292,7 @@ router.put("/update/:id", (req, res) => {
                 lender_contact_last_name = ?,
                 lender_contact_email = ?,
                 lender_contact_phone_number = ? 
-              WHERE id = ?`;
+              WHERE id = ? AND user_id = ?`;
 
   const values = [
     mls_vendor,
@@ -303,33 +328,37 @@ router.put("/update/:id", (req, res) => {
     lender_contact_email,
     lender_contact_phone_number,
     id,
+    userId
   ];
 
   connection.query(sql, values, (err, result) => {
     if (err) {
       return res.status(400).json({ err });
+    } else if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Transaction not found" });
     } else {
-      console.log(result);
-      return res
-        .status(200)
-        .json({ message: "Transaction updated successfully" });
+      return res.status(200).json("Transaction updated successfully");
     }
   });
 });
 
-router.delete("/delete/:id", (req, res) => {
-  const id = req.params.id;
-  const sql = "DELETE FROM transactions WHERE id = ?";
-  connection.query(sql, id, (err, result) => {
-    if (err) {
-      return res.status(400).json({ err });
-    } else {
-      console.log(result);
-      return res
-        .status(200)
-        .json({ message: "Transaction deleted successfully" });
-    }
-  });
+
+router.delete("/delete/:id",verifyToken, (req, res) => {
+ const transactionId = req.params.id;
+ const userId = req.userId;
+ const sql = "DELETE FROM transaction WHERE id = ? AND user_id = ?";
+
+ connection.query(sql, [transactionId, userId], (err, result) => {
+   if (err) {
+     return res.status(400).json({ error: err.message });
+   }
+
+   if (result.affectedRows === 0) {
+     return res.status(404).json({ error: "Transaction not found" });
+   }
+
+   return res.status(200).json("Transaction deleted successfully");
+ });
 });
 
 

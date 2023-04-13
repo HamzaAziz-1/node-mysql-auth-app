@@ -31,8 +31,9 @@ const connection = mysql.createConnection({
 connection.connect(function (err) {
   if (err) throw err;
   console.log("Connected!");
-  let sql = `CREATE TABLE IF NOT EXISTS transactions (
+  let sql = `CREATE TABLE IF NOT EXISTS transaction (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
     mls_vendor VARCHAR(255),
     mls_number VARCHAR(255) NOT NULL,
     street_address VARCHAR(255) NOT NULL,

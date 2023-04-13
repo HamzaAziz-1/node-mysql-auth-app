@@ -111,6 +111,7 @@ const InputTransactions = () => {
     console.log(formValues);
   };
   const token = isAuthenticated().token;
+  console.log(token);
   useEffect(() => {
     // Fetch the current user's information and update the form fields
     const fetchUser = async () => {
@@ -152,8 +153,15 @@ const InputTransactions = () => {
     }
 
     setValidated(true);
-    axios
-      .post("http://localhost:8000/transaction/inputs", formValues)
+    axios({
+      method: "post",
+      url: "http://localhost:8000/transaction/inputs",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      data: formValues,
+    })
       .then((response) => {
         console.log(response.data);
         // Reset formValues
@@ -257,41 +265,25 @@ const InputTransactions = () => {
         <Form.Group
           as={Col}
           md="4"
-          controlId="validationCustom02"
+          controlId="validationCustomUsername"
           className="mt-2 mb-2"
         >
-          <Form.Label>Street Address</Form.Label>
-          <Form.Control
-            required
-            type="text"
-            placeholder="Street Address"
-            value={formValues.street_address}
-            name="street_address"
-            onChange={handleChange}
-          />
-          <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
+          <Form.Label>Property Tax ID Number</Form.Label>
+          <InputGroup hasValidation>
+            <Form.Control
+              type="text"
+              placeholder="Property Tax ID Number"
+              required
+              name="property_tax_id_number"
+              value={formValues.property_tax_id_number}
+              onChange={handleChange}
+            />
+            <Form.Control.Feedback type="invalid">
+              Please choose a Property Tax ID Number.
+            </Form.Control.Feedback>
+          </InputGroup>
         </Form.Group>
-
-        <Form.Group
-          as={Col}
-          md="4"
-          controlId="validationCustom03"
-          className="mt-2 mb-2"
-        >
-          <Form.Label>City</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="City"
-            value={formValues.city}
-            name="city"
-            onChange={handleChange}
-            required
-          />
-          <Form.Control.Feedback type="invalid">
-            Please provide a valid city.
-          </Form.Control.Feedback>
-        </Form.Group>
-        <Form.Group as={Col} md="4"  name="state">
+        <Form.Group as={Col} md="4" name="state">
           <Form.Label>State</Form.Label>
           <Form.Select
             onChange={handleChange}
@@ -315,23 +307,39 @@ const InputTransactions = () => {
         <Form.Group
           as={Col}
           md="4"
-          controlId="validationCustomUsername"
+          controlId="validationCustom03"
           className="mt-2 mb-2"
         >
-          <Form.Label>Property Tax ID Number</Form.Label>
-          <InputGroup hasValidation>
-            <Form.Control
-              type="text"
-              placeholder="Property Tax ID Number"
-              required
-              name="property_tax_id_number"
-              value={formValues.property_tax_id_number}
-              onChange={handleChange}
-            />
-            <Form.Control.Feedback type="invalid">
-              Please choose a Property Tax ID Number.
-            </Form.Control.Feedback>
-          </InputGroup>
+          <Form.Label>City</Form.Label>
+          <Form.Control
+            type="text"
+            placeholder="City"
+            value={formValues.city}
+            name="city"
+            onChange={handleChange}
+            required
+          />
+          <Form.Control.Feedback type="invalid">
+            Please provide a valid city.
+          </Form.Control.Feedback>
+        </Form.Group>
+
+        <Form.Group
+          as={Col}
+          md="4"
+          controlId="validationCustom02"
+          className="mt-2 mb-2"
+        >
+          <Form.Label>Street Address</Form.Label>
+          <Form.Control
+            required
+            type="text"
+            placeholder="Street Address"
+            value={formValues.street_address}
+            name="street_address"
+            onChange={handleChange}
+          />
+          <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
         </Form.Group>
       </Row>
       <Row className="mb-3">

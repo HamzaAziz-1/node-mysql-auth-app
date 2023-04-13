@@ -12,9 +12,14 @@ import { Link } from "react-router-dom";
 
 const ShowTransactions = () => {
   const [transactions, setTransactions] = useState([]);
-
+const token = isAuthenticated().token;
   useEffect(() => {
-    fetch("http://localhost:8000/transaction/showAll")
+    fetch("http://localhost:8000/transaction/showAll", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    })
       .then((response) => response.json())
       .then((data) => setTransactions(data))
       .catch((error) => console.log(error));
@@ -22,7 +27,11 @@ const ShowTransactions = () => {
 
   const handleDelete = (id) => {
     axios
-      .delete(`http://localhost:8000/transaction/delete/${id}`)
+      .delete(`http://localhost:8000/transaction/delete/${id}`,{
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
       .then((res) => {
         console.log(res.data);
         setTransactions(transactions.filter((t) => t.id !== id));
@@ -37,33 +46,37 @@ const ShowTransactions = () => {
         <Table striped bordered hover>
           <thead>
             <tr>
-              <th>Id</th>
+              <th>Buyer's Name</th>
+              <th>Buyer's Address</th>
               <th>Action</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody>
-            {transactions.map((transaction) => (
-              <tr key={transaction.id}>
-                <td>{transaction.id}</td>
-                <td>
-                  <Link
-                    className="nav-link"
-                    to={`/update-transactions/${transaction.id}`}
-                  >
-                    <Button variant="outline-success">Update</Button>
-                  </Link>
-                </td>
-                <td>
-                  <Button
-                    variant="outline-warning"
-                    onClick={() => handleDelete(transaction.id)}
-                  >
-                    Delete
-                  </Button>
-                </td>
-              </tr>
-            ))}
+            {transactions &&
+              transactions.length > 0 &&
+              transactions.map((transaction) => (
+                <tr key={transaction.id}>
+                  <td>{transaction.buyer_name}</td>
+                  <td>{transaction.buyer_current_address}</td>
+                  <td>
+                    <Link
+                      className="nav-link"
+                      to={`/update-transactions/${transaction.id}`}
+                    >
+                      <Button variant="outline-success">Update</Button>
+                    </Link>
+                  </td>
+                  <td>
+                    <Button
+                      variant="outline-danger"
+                      onClick={() => handleDelete(transaction.id)}
+                    >
+                      Delete
+                    </Button>
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </Table>
       </div>

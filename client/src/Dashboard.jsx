@@ -27,7 +27,7 @@ const Dashboard = () => {
         setuserId(id);
         setEmail(email);
         setName(name);
-        console.log(id);
+        console.log("User id is: "+id);
       } catch (error) {
         console.log(error.response.data);
         setErrorMessage(error.response.data.error);
