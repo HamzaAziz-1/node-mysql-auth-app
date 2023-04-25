@@ -1,9 +1,14 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import Layout from "./Layout";
-import { Link } from "react-router-dom";
+import { Link,useHistory } from "react-router-dom";
 import axios from "axios";
 import Select from "react-select";
+
 const SignupForm = () => {
+  const clientId =
+    "133522538881-2j9114vn23tf58143tvn348mivgeaqjr.apps.googleusercontent.com";
+
+  
  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -62,6 +67,17 @@ const SignupForm = () => {
     "Wisconsin",
     "Wyoming",
   ];
+
+  const history = useHistory();
+   useEffect(() => {
+     const script = document.createElement("script");
+     script.src = "https://accounts.google.com/gsi/client";
+     script.async = true;
+     script.defer = true;
+     script.onload = initGoogleButton;
+     document.body.appendChild(script);
+   }, []);
+
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -101,6 +117,56 @@ const SignupForm = () => {
     }
   };
   
+   const initGoogleButton = () => {
+    window.google.accounts.id.initialize({
+      client_id: clientId,
+      callback: handleCredentialResponse,
+      cancel_on_tap_outside: false,
+      scope:
+        "email profile openid https://www.googleapis.com/auth/contacts.readonly", // Add the required scopes here
+    });
+
+     window.google.accounts.id.renderButton(
+       document.getElementById("google-auth-button"),
+       {
+         theme: "outline",
+         size: "large",
+       }
+     );
+     window.google.accounts.id.prompt();
+   };
+
+   const handleCredentialResponse = async (response) => {
+     const { client_id, credential } = response;
+
+     // Send the token to your backend for user authentication and creation
+     const backendResponse = await fetch(
+       "http://localhost:8000/auth/google-signin",
+       {
+         method: "POST",
+         headers: {
+           "Content-Type": "application/json",
+         },
+         body: JSON.stringify({ token: credential }),
+       }
+     );
+
+     const data = await backendResponse.json();
+     console.log("Login success:", data);
+     const storageData = {
+       accessToken: data.access_token,
+       jwt: data.token, // Store the JWT token
+       user: data.user, // Store the user data
+     };
+     localStorage.setItem("user", JSON.stringify(storageData));
+     // Save the token in local storage
+     localStorage.setItem("jwt", JSON.stringify(data));
+
+     // Navigate to the dashboard
+     history.push("/dashboard");
+   };
+
+ 
 
   const signUpForm = () => (
     <form onSubmit={handleSubmit}>
@@ -142,12 +208,15 @@ const SignupForm = () => {
         />
       </div>
 
-      <div className="text-center">
-        <button type="submit" className="mt-3 btn btn-outline-danger ">
+      <div className="text-center mt-5 pt-3">
+        <button type="submit" className="mt-3 mb-5 btn btn-outline-danger ">
           {" "}
           Register
         </button>
+        <div style={{ marginLeft: "11em" }} className="" id="google-auth-button" role="button" tabIndex="0"></div>
+        <div className="mt-5"></div>
       </div>
+
       {errorMessage && <div style={{ color: "red" }}>{errorMessage}</div>}
       {successMessage && <div style={{ color: "green" }}>{successMessage}</div>}
     </form>
@@ -161,8 +230,8 @@ const SignupForm = () => {
       description="Sign Up to  Website"
       className="container col-md-5 text-align-centre"
     >
-      
       {signUpForm()}
+     
     </Layout>
   );
 };

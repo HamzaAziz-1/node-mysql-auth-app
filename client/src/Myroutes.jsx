@@ -8,8 +8,11 @@ import Dashboard from "./Dashboard";
 import ShowTransactions from "./ShowTransactions";
 import UpdateTransactions from "./UpdateTransactions";
 import PrivateRoute from "./PrivateRoute";
+import GoogleAuth from "./GoogleAuth";
+import { isAuthenticated } from "./auth";
 
 const Myroutes = () => {
+  
   const PrivateDashboardRoute = () => (
     <PrivateRoute>
       <Dashboard />
@@ -31,6 +34,12 @@ const Myroutes = () => {
       <ShowTransactions />
     </PrivateRoute>
   );
+  const googleRoute = () => {
+    const accessToken = isAuthenticated().accessToken;
+    return(
+      <GoogleAuth accesToken={accessToken} />  
+    )
+    }
 
 
   return (
@@ -38,6 +47,7 @@ const Myroutes = () => {
     <BrowserRouter>
       <Switch>
         <Route path="/" exact component={Home} />
+        <Route path="/google" exact component={googleRoute} />
         <Route path="/signin" exact component={Signin} />
         <Route path="/signup" exact component={Signup} />
         <Route path="/dashboard" exact component={PrivateDashboardRoute} ></Route>

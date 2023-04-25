@@ -19,6 +19,14 @@ app.use(morgan("dev"));
 app.use(cookieParser());
 app.use(cors());
 
+app.use(
+  cors({
+    origin: "http://localhost:3000", // Replace this with the URL of your frontend app
+    credentials: true,
+  })
+);
+
+
 // create connection to mysql database
 const connection = mysql.createConnection({
   host: process.env.host,
@@ -39,6 +47,7 @@ connection.connect(function (err) {
     street_address VARCHAR(255) NOT NULL,
     city VARCHAR(255) NOT NULL,
     state VARCHAR(255) NOT NULL,
+    zip_code VARCHAR(255) NOT NULL,
     property_tax_id_number VARCHAR(255) NOT NULL,
     lot VARCHAR(255) NOT NULL,
     block VARCHAR(255) NOT NULL,

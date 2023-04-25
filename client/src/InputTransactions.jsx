@@ -15,6 +15,7 @@ const InputTransactions = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [validated, setValidated] = useState(false);
+  const [contacts,setContacts] = useState([]);
   const history = useHistory();
   const statenames = [
     "Alabama",
@@ -74,6 +75,7 @@ const InputTransactions = () => {
     street_address: "",
     city: "",
     state: "",
+    zip_code: "",
     property_tax_id_number: "",
     lot: "",
     block: "",
@@ -132,8 +134,142 @@ const InputTransactions = () => {
         setErrorMessage(error.response.data.error);
       }
     };
+
+    const getContacts = () => {
+       const CLIENT_ID =
+         "133522538881-2j9114vn23tf58143tvn348mivgeaqjr.apps.googleusercontent.com";
+       const API_KEY = "AIzaSyBuI1lYP5WFHFOOQ8y55x4AjHiafJuXSho";
+       const DISCOVERY_DOC =
+         "https://www.googleapis.com/discovery/v1/apis/people/v1/rest";
+       const SCOPES = "https://www.googleapis.com/auth/contacts.readonly";
+
+       let tokenClient;
+       let gapiInited = false;
+       let gisInited = false;
+
+       document.getElementById("authorize_button").style.visibility = "hidden";
+       document.getElementById("signout_button").style.visibility = "hidden";
+
+       const scriptGapi = document.createElement("script");
+       scriptGapi.src = "https://apis.google.com/js/api.js";
+       scriptGapi.async = true;
+       scriptGapi.defer = true;
+       scriptGapi.onload = () => {
+         window.gapi.load("client", initializeGapiClient);
+       };
+       document.body.appendChild(scriptGapi);
+       const scriptGis = document.createElement("script");
+       scriptGis.src = "https://accounts.google.com/gsi/client";
+       scriptGis.async = true;
+       scriptGis.defer = true;
+       scriptGis.onload = gisLoaded;
+       document.body.appendChild(scriptGis);
+
+       // Functions from the original HTML code
+       async function initializeGapiClient() {
+         await window.gapi.client.init({
+           apiKey: API_KEY,
+           discoveryDocs: [DISCOVERY_DOC],
+         });
+         gapiInited = true;
+         maybeEnableButtons();
+       }
+
+       function gisLoaded() {
+         tokenClient = window.google.accounts.oauth2.initTokenClient({
+           client_id: CLIENT_ID,
+           scope: SCOPES,
+           callback: "", // defined later
+         });
+         gisInited = true;
+         maybeEnableButtons();
+       }
+
+       function maybeEnableButtons() {
+         if (gapiInited && gisInited) {
+           document.getElementById("authorize_button").style.visibility =
+             "visible";
+         }
+       }
+
+       window.handleAuthClick = () => {
+         tokenClient.callback = async (resp) => {
+           if (resp.error !== undefined) {
+             throw resp;
+           }
+           document.getElementById("signout_button").style.visibility =
+             "visible";
+           document.getElementById("authorize_button").innerText = "Refresh";
+           await listConnectionNames();
+         };
+
+         if (window.gapi.client.getToken() === null) {
+           tokenClient.requestAccessToken({ prompt: "consent" });
+         } else {
+           tokenClient.requestAccessToken({ prompt: "" });
+         }
+       };
+
+       window.handleSignoutClick = () => {
+         const token = window.gapi.client.getToken();
+         if (token !== null) {
+           window.google.accounts.oauth2.revoke(token.access_token);
+           window.gapi.client.setToken("");
+           document.getElementById("content").innerText = "";
+           document.getElementById("authorize_button").innerText = "Authorize";
+           document.getElementById("signout_button").style.visibility =
+             "hidden";
+         }
+       };
+
+
+    }
     fetchUser();
+    getContacts();
+    listConnectionNames();
   }, []);
+
+  const listConnectionNames = async () => {
+    let response;
+    try {
+      response = await window.gapi.client.people.people.connections.list({
+        resourceName: "people/me",
+        pageSize: 1000,
+        personFields: "names,emailAddresses,phoneNumbers,addresses",
+      });
+    } catch (err) {
+      console.error(err.message);
+      return;
+    }
+    const connections = response.result.connections;
+    console.log(connections);
+    if (!connections || connections.length === 0) {
+      console.log("No connections found.");
+      return;
+    }
+    const contactData = connections.map((person) => {
+      const name =
+        person.names && person.names.length > 0
+          ? person.names[0].displayName
+          : "Missing display name";
+      const email =
+        person.emailAddresses && person.emailAddresses.length > 0
+          ? person.emailAddresses[0].value
+          : "No email";
+      const phoneNumber =
+        person.phoneNumbers && person.phoneNumbers.length > 0
+          ? person.phoneNumbers[0].value
+          : "No phone number";
+      const address =
+        person.addresses && person.addresses.length > 0
+          ? person.addresses[0].value
+          : "No address";
+
+      return { name, email, phoneNumber, address };
+    });
+
+    setContacts(contactData);
+  };
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -171,6 +307,7 @@ const InputTransactions = () => {
           street_address: "",
           city: "",
           state: "",
+          zip_code: "",
           property_tax_id_number: "",
           lot: "",
           block: "",
@@ -283,7 +420,44 @@ const InputTransactions = () => {
             </Form.Control.Feedback>
           </InputGroup>
         </Form.Group>
-        <Form.Group as={Col} md="4" name="state">
+        <Form.Group
+          as={Col}
+          md="3"
+          controlId="validationCustom02"
+          className="mt-2 mb-2"
+        >
+          <Form.Label>Street Address</Form.Label>
+          <Form.Control
+            required
+            type="text"
+            placeholder="Street Address"
+            value={formValues.street_address}
+            name="street_address"
+            onChange={handleChange}
+          />
+          <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
+        </Form.Group>
+
+        <Form.Group
+          as={Col}
+          md="3"
+          controlId="validationCustom03"
+          className="mt-2 mb-2"
+        >
+          <Form.Label>City</Form.Label>
+          <Form.Control
+            type="text"
+            placeholder="City"
+            value={formValues.city}
+            name="city"
+            onChange={handleChange}
+            required
+          />
+          <Form.Control.Feedback type="invalid">
+            Please provide a valid city.
+          </Form.Control.Feedback>
+        </Form.Group>
+        <Form.Group as={Col} md="3" name="state">
           <Form.Label>State</Form.Label>
           <Form.Select
             onChange={handleChange}
@@ -306,37 +480,17 @@ const InputTransactions = () => {
         </Form.Group>
         <Form.Group
           as={Col}
-          md="4"
-          controlId="validationCustom03"
-          className="mt-2 mb-2"
-        >
-          <Form.Label>City</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="City"
-            value={formValues.city}
-            name="city"
-            onChange={handleChange}
-            required
-          />
-          <Form.Control.Feedback type="invalid">
-            Please provide a valid city.
-          </Form.Control.Feedback>
-        </Form.Group>
-
-        <Form.Group
-          as={Col}
-          md="4"
+          md="3"
           controlId="validationCustom02"
           className="mt-2 mb-2"
         >
-          <Form.Label>Street Address</Form.Label>
+          <Form.Label>Zip Code</Form.Label>
           <Form.Control
             required
             type="text"
-            placeholder="Street Address"
-            value={formValues.street_address}
-            name="street_address"
+            placeholder="Zip Code"
+            value={formValues.zip_code}
+            name="zip_code"
             onChange={handleChange}
           />
           <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
@@ -582,7 +736,7 @@ const InputTransactions = () => {
           Make me the agent
         </Button>
       </div>
-      <Row className="mb-3 ">
+      <Row className="mb-3">
         <div>
           <Form.Label className="text font-weight-bold">Buyer</Form.Label>
         </div>
@@ -601,7 +755,13 @@ const InputTransactions = () => {
             name="buyer_name"
             value={formValues.buyer_name}
             onChange={handleChange}
+            list="name-datalist"
           />
+          <datalist id="name-datalist">
+            {contacts.map((contact, index) => (
+              <option key={index} value={contact.name} />
+            ))}
+          </datalist>
           <Form.Control.Feedback type="invalid">
             Please provide a valid Name.
           </Form.Control.Feedback>
@@ -620,7 +780,13 @@ const InputTransactions = () => {
             name="buyer_email_address"
             value={formValues.buyer_email_address}
             onChange={handleChange}
+            list="email-datalist"
           />
+          <datalist id="email-datalist">
+            {contacts.map((contact, index) => (
+              <option key={index} value={contact.email} />
+            ))}
+          </datalist>
           <Form.Control.Feedback type="invalid">
             Please provide a valid email.
           </Form.Control.Feedback>
@@ -641,9 +807,15 @@ const InputTransactions = () => {
             name="buyer_phone_number"
             value={formValues.buyer_phone_number}
             onChange={handleChange}
+            list="phone-datalist"
           />
+          <datalist id="phone-datalist">
+            {contacts.map((contact, index) => (
+              <option key={index} value={contact.phoneNumber} />
+            ))}
+          </datalist>
           <Form.Control.Feedback type="invalid">
-            Please provide a valid Phone nO.
+            Please provide a valid Phone No.
           </Form.Control.Feedback>
         </Form.Group>
 
@@ -661,12 +833,20 @@ const InputTransactions = () => {
             name="buyer_current_address"
             value={formValues.buyer_current_address}
             onChange={handleChange}
+            list="address-datalist"
           />
+          <datalist id="address-datalist">
+            {contacts.map((contact, index) => (
+              <option key={index} value={contact.address} />
+            ))}
+          </datalist>
           <Form.Control.Feedback type="invalid">
             Please provide a valid Current Address.
           </Form.Control.Feedback>
         </Form.Group>
       </Row>
+
+     
       <Row className="mb-3 ">
         <div>
           <Form.Label className="text font-weight-bold">
@@ -946,6 +1126,20 @@ const InputTransactions = () => {
       className="container col-md-8 offset-md-2"
     >
       {/* {updateForm()} */}
+      <div>
+        <p>Get Your Contacts from Google</p>
+
+        {/* Render the buttons as React elements */}
+        <Button id="authorize_button" onClick={() => window.handleAuthClick()}>
+          Authorize
+        </Button>
+        <Button id="signout_button" onClick={() => window.handleSignoutClick()}>
+          Sign Out
+        </Button>
+
+        <pre id="content" style={{ whiteSpace: "pre-wrap" }}></pre>
+      </div>
+     
       {transactionForm()}
     </Layout>
   );

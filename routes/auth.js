@@ -3,7 +3,13 @@ const mysql = require("mysql");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const router = express.Router();
-const { checkAuth } = require ("../middlewares/auth.js");
+const { checkAuth } = require("../middlewares/auth.js");
+const { OAuth2Client } = require("google-auth-library");
+
+const googleClientId =
+  "133522538881-2j9114vn23tf58143tvn348mivgeaqjr.apps.googleusercontent.com";
+const googleClient = new OAuth2Client(googleClientId);
+
 
 // create connection to mysql database
 const connection = mysql.createConnection({
@@ -74,6 +80,78 @@ router.post("/login", (req, res) => {
       }
     }
   );
+});
+
+router.post("/google-signin", async (req, res) => {
+  console.log(req.body);
+  const googleToken = req.body.token;
+
+  try {
+    // Verify the token with Google
+    const ticket = await googleClient.verifyIdToken({
+      idToken: googleToken,
+      audience: googleClientId,
+    });
+
+    const payload = ticket.getPayload();
+    const email = payload.email;
+
+    // Check if the user exists in the database
+    connection.query(
+      "SELECT * FROM users WHERE email = ?",
+      [email],
+      async function (error, results, fields) {
+        if (error) throw error;
+
+        let user;
+
+        // If user exists, update the record
+        if (results.length > 0) {
+          user = results[0];
+        } else {
+          // If user doesn't exist, create a new record
+          const name = payload.name;
+          const password = "";
+          const state = "";
+
+          await new Promise((resolve, reject) => {
+            connection.query(
+              "INSERT INTO users (name, email, password, state) VALUES (?, ?, ?, ?)",
+              [name, email, password, state],
+              function (error, results, fields) {
+                if (error) reject(error);
+                resolve();
+              }
+            );
+          });
+
+          user = { id: results.insertId, name, email, password, state };
+        }
+
+        // Create a JWT token
+        const token = jwt.sign({ userId: user.id }, "secret-key", {
+          expiresIn: "1h",
+        });
+
+      res.status(200).json({
+        message: "Login successful",
+        token: token, // Your JWT token
+        accessToken: googleToken, // The Google access token
+        idToken: req.body.token, // The Google ID token
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          state: user.state,
+        },
+      });
+      }
+    );
+  } catch (error) {
+    res.status(401).json({
+      error: "Invalid token",
+    });
+  }
 });
 
 // signup route
