@@ -345,34 +345,37 @@ const InputTransactions = () => {
       buyer_agent_name: name,
     });
   };
-  const handlePlaceSelected = (place) => {
-    const addressComponents = place.address_components;
-    const streetNumber = addressComponents.find((component) =>
-      component.types.includes("street_number")
-    );
-    const streetName = addressComponents.find((component) =>
-      component.types.includes("route")
-    );
-    const city = addressComponents.find((component) =>
-      component.types.includes("locality")
-    );
-    const state = addressComponents.find((component) =>
-      component.types.includes("administrative_area_level_1")
-    );
-    const zipCode = addressComponents.find((component) =>
-      component.types.includes("postal_code")
-    );
+ const handlePlaceSelected = (place) => {
+   const addressComponents = place.address_components;
+   const streetNumber = addressComponents.find((component) =>
+     component.types.includes("street_number")
+   );
+   const streetName = addressComponents.find((component) =>
+     component.types.includes("route")
+   );
+   const city = addressComponents.find((component) =>
+     component.types.includes("locality")
+   );
+   const state = addressComponents.find((component) =>
+     component.types.includes("administrative_area_level_1")
+   );
+   const zipCode = addressComponents.find((component) =>
+     component.types.includes("postal_code")
+   );
 
-    setFormValues({
-      ...formValues,
-      street_address: `${streetNumber ? streetNumber.long_name : ""} ${
-        streetName ? streetName.long_name : ""
-      }`,
-      city: city ? city.long_name : "",
-      state: state ? state.short_name : "",
-      zip_code: zipCode ? zipCode.long_name : "",
-    });
+   setFormValues({
+     ...formValues,
+     street_address: `${streetNumber ? streetNumber.long_name : ""} ${
+       streetName ? streetName.long_name : ""
+     }`,
+     city: city ? city.long_name : "",
+     state: state ? state.short_name : "",
+     zip_code: zipCode ? zipCode.long_name : "",
+   });
   };
+  
+
+
 
   const transactionForm = () => (
     <Form noValidate validated={validated} onSubmit={handleSubmit}>
@@ -457,7 +460,11 @@ const InputTransactions = () => {
           className="mt-2 mb-2"
         >
           <Form.Label>City</Form.Label>
-          <GoogleMapAutocomplete onPlaceSelected={handlePlaceSelected} />
+          <GoogleMapAutocomplete
+            onPlaceSelected={handlePlaceSelected}
+            defaultValue={formValues.city}
+            
+          />
           <Form.Control.Feedback type="invalid">
             Please provide a valid city.
           </Form.Control.Feedback>
@@ -470,7 +477,9 @@ const InputTransactions = () => {
           className="mt-2 mb-2"
         >
           <Form.Label>State</Form.Label>
-          <GoogleMapAutocomplete onPlaceSelected={handlePlaceSelected} />
+          <GoogleMapAutocomplete onPlaceSelected={handlePlaceSelected}
+          defaultValue={formValues.state}
+          />
           <Form.Control.Feedback type="invalid">
             Please provide a valid city.
           </Form.Control.Feedback>
@@ -482,7 +491,9 @@ const InputTransactions = () => {
           className="mt-2 mb-2"
         >
           <Form.Label>Zip Code</Form.Label>
-          <GoogleMapAutocomplete onPlaceSelected={handlePlaceSelected} />
+          <GoogleMapAutocomplete onPlaceSelected={handlePlaceSelected}
+            defaultValue={formValues.zip_code}
+          />
           <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
         </Form.Group>
       </Row>

@@ -2,7 +2,7 @@ import React, { useState,useEffect } from "react";
 import { Autocomplete } from "@react-google-maps/api";
 import Form from "react-bootstrap/Form";
 
-const GoogleMapAutocomplete = ({ onPlaceSelected, defaultValue }) => {
+const GoogleMapAutocomplete = ({ onPlaceSelected,defaultValue }) => {
   const [autocomplete, setAutocomplete] = useState(null);
   const [apiReady, setApiReady] = useState(false);
 
