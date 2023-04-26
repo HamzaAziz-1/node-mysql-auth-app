@@ -14,7 +14,7 @@ const Dashboard = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const token = isAuthenticated().token;
   const accessToken = isAuthenticated().accessToken;
-  console.log("Access Token is: "+accessToken);
+ 
   useEffect(() => {
     // Fetch the current user's information and update the form fields
     const fetchUser = async () => {
@@ -28,9 +28,9 @@ const Dashboard = () => {
         setuserId(id);
         setEmail(email);
         setName(name);
-        console.log("User id is: "+id);
+       
       } catch (error) {
-        console.log(error.response.data);
+      
         setErrorMessage(error.response.data.error);
       }
     };

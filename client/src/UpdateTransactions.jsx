@@ -7,8 +7,8 @@ import Col from "react-bootstrap/Col";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import Row from "react-bootstrap/Row";
-import { useParams,useHistory } from "react-router-dom";
-
+import { useParams, useHistory } from "react-router-dom";
+import GoogleMapAutocomplete from "./GoogleMapAutocomplete";
 const UpdateTransactions = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -105,8 +105,8 @@ const UpdateTransactions = () => {
     lender_contact_email: "",
     lender_contact_phone_number: "",
   });
-    const transactionId = useParams().id;
-    console.log("Id is"+transactionId);
+  const transactionId = useParams().id;
+  console.log("Id is" + transactionId);
   const handleChange = (event) => {
     setFormValues({
       ...formValues,
@@ -139,8 +139,8 @@ const UpdateTransactions = () => {
   }, []);
   useEffect(() => {
     // Fetch the current user's information and update the form fields
-    
-      axios
+
+    axios
       .get(`http://localhost:8000/transaction/show/${transactionId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -166,9 +166,13 @@ const UpdateTransactions = () => {
 
     setValidated(true);
     axios
-      .put(`http://localhost:8000/transaction/update/${transactionId}`, formValues, {
-        headers: { Authorization: `Bearer ${token}` }, // send the token through the headers
-      })
+      .put(
+        `http://localhost:8000/transaction/update/${transactionId}`,
+        formValues,
+        {
+          headers: { Authorization: `Bearer ${token}` }, // send the token through the headers
+        }
+      )
       .then((response) => {
         console.log(response);
         setSuccessMessage("Transaction updated successfully");
@@ -177,9 +181,7 @@ const UpdateTransactions = () => {
       .catch((error) => {
         console.log(error.response.data);
         setErrorMessage(error.response.data.error);
-
       });
-    
   };
   const handleMakeMeTheAgent = () => {
     setFormValues({
@@ -188,7 +190,34 @@ const UpdateTransactions = () => {
       buyer_agent_name: name,
     });
   };
+  const handlePlaceSelected = (place) => {
+    const addressComponents = place.address_components;
+    const streetNumber = addressComponents.find((component) =>
+      component.types.includes("street_number")
+    );
+    const streetName = addressComponents.find((component) =>
+      component.types.includes("route")
+    );
+    const city = addressComponents.find((component) =>
+      component.types.includes("locality")
+    );
+    const state = addressComponents.find((component) =>
+      component.types.includes("administrative_area_level_1")
+    );
+    const zipCode = addressComponents.find((component) =>
+      component.types.includes("postal_code")
+    );
 
+    setFormValues({
+      ...formValues,
+      street_address: `${streetNumber ? streetNumber.long_name : ""} ${
+        streetName ? streetName.long_name : ""
+      }`,
+      city: city ? city.long_name : "",
+      state: state ? state.short_name : "",
+      zip_code: zipCode ? zipCode.long_name : "",
+    });
+  };
 
   const transactionForm = () => (
     <Form noValidate validated={validated} onSubmit={handleSubmit}>
@@ -262,13 +291,9 @@ const UpdateTransactions = () => {
           className="mt-2 mb-2"
         >
           <Form.Label>Street Address</Form.Label>
-          <Form.Control
-            required
-            type="text"
-            placeholder="Street Address"
-            value={formValues.street_address}
-            name="street_address"
-            onChange={handleChange}
+          <GoogleMapAutocomplete
+            onPlaceSelected={handlePlaceSelected}
+            defaultValue={formValues.street_address}
           />
           <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
         </Form.Group>
@@ -280,38 +305,29 @@ const UpdateTransactions = () => {
           className="mt-2 mb-2"
         >
           <Form.Label>City</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="City"
-            value={formValues.city}
-            name="city"
-            onChange={handleChange}
-            required
+          <GoogleMapAutocomplete
+            onPlaceSelected={handlePlaceSelected}
+            defaultValue={formValues.city}
           />
           <Form.Control.Feedback type="invalid">
             Please provide a valid city.
           </Form.Control.Feedback>
         </Form.Group>
-        <Form.Group as={Col} md="3" name="state">
+
+        <Form.Group
+          as={Col}
+          md="3"
+          controlId="validationCustom03"
+          className="mt-2 mb-2"
+        >
           <Form.Label>State</Form.Label>
-          <Form.Select
-            onChange={handleChange}
-            className="mt-2 mb-2"
-            value={formValues.state}
-            name="state"
-          >
-            <option>Select State</option>
-            {statenames.map((state, index) => (
-              <option key={index} value={state}>
-                {state}
-              </option>
-            ))}
-          </Form.Select>
-          {errorMessage && (
-            <div style={{ color: "red" }} className="error-message">
-              {errorMessage}
-            </div>
-          )}
+          <GoogleMapAutocomplete
+            onPlaceSelected={handlePlaceSelected}
+            defaultValue={formValues.state}
+          />
+          <Form.Control.Feedback type="invalid">
+            Please provide a valid city.
+          </Form.Control.Feedback>
         </Form.Group>
         <Form.Group
           as={Col}
@@ -320,13 +336,9 @@ const UpdateTransactions = () => {
           className="mt-2 mb-2"
         >
           <Form.Label>Zip Code</Form.Label>
-          <Form.Control
-            required
-            type="text"
-            placeholder="Zip Code"
-            value={formValues.zip_code}
-            name="zip_code"
-            onChange={handleChange}
+          <GoogleMapAutocomplete
+            onPlaceSelected={handlePlaceSelected}
+            defaultValue={formValues.zip_code}
           />
           <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
         </Form.Group>
@@ -405,7 +417,7 @@ const UpdateTransactions = () => {
             type="date"
             placeholder="Closing Date"
             name="closing_date"
-            value={formValues.closing_date.slice(0, 10)}
+            value={formValues.closing_date}
             required
             onChange={handleChange}
           />
@@ -475,7 +487,7 @@ const UpdateTransactions = () => {
             placeholder="Deadline After EMD Accepted"
             required
             name="deadline_after_emd_accepted"
-            value={formValues.deadline_after_emd_accepted.slice(0, 10)}
+            value={formValues.deadline_after_emd_accepted}
             onChange={handleChange}
           />
           <Form.Control.Feedback type="invalid">
@@ -571,7 +583,7 @@ const UpdateTransactions = () => {
           Make me the agent
         </Button>
       </div>
-      <Row className="mb-3 ">
+      <Row className="mb-3">
         <div>
           <Form.Label className="text font-weight-bold">Buyer</Form.Label>
         </div>
@@ -591,6 +603,7 @@ const UpdateTransactions = () => {
             value={formValues.buyer_name}
             onChange={handleChange}
           />
+
           <Form.Control.Feedback type="invalid">
             Please provide a valid Name.
           </Form.Control.Feedback>
@@ -610,6 +623,7 @@ const UpdateTransactions = () => {
             value={formValues.buyer_email_address}
             onChange={handleChange}
           />
+
           <Form.Control.Feedback type="invalid">
             Please provide a valid email.
           </Form.Control.Feedback>
@@ -631,8 +645,9 @@ const UpdateTransactions = () => {
             value={formValues.buyer_phone_number}
             onChange={handleChange}
           />
+
           <Form.Control.Feedback type="invalid">
-            Please provide a valid Phone nO.
+            Please provide a valid Phone No.
           </Form.Control.Feedback>
         </Form.Group>
 
@@ -651,11 +666,13 @@ const UpdateTransactions = () => {
             value={formValues.buyer_current_address}
             onChange={handleChange}
           />
+
           <Form.Control.Feedback type="invalid">
             Please provide a valid Current Address.
           </Form.Control.Feedback>
         </Form.Group>
       </Row>
+
       <Row className="mb-3 ">
         <div>
           <Form.Label className="text font-weight-bold">
@@ -919,7 +936,7 @@ const UpdateTransactions = () => {
       </Row>
       <div className="text-center mt-5 mb-5">
         <Button variant="dark" type="submit">
-          Update
+          Submit
         </Button>
       </div>
 

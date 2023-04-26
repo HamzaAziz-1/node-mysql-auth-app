@@ -8,6 +8,8 @@ import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import Row from "react-bootstrap/Row";
 import { useHistory } from "react-router-dom";
+import GoogleMapAutocomplete from "./GoogleMapAutocomplete";
+
 const InputTransactions = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -15,7 +17,7 @@ const InputTransactions = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [validated, setValidated] = useState(false);
-  const [contacts,setContacts] = useState([]);
+  const [contacts, setContacts] = useState([]);
   const history = useHistory();
   const statenames = [
     "Alabama",
@@ -110,10 +112,9 @@ const InputTransactions = () => {
       ...formValues,
       [event.target.name]: event.target.value,
     });
-    console.log(formValues);
   };
   const token = isAuthenticated().token;
-  console.log(token);
+
   useEffect(() => {
     // Fetch the current user's information and update the form fields
     const fetchUser = async () => {
@@ -128,102 +129,97 @@ const InputTransactions = () => {
         setId(id);
         setEmail(email);
         setName(name);
-        console.log(id);
       } catch (error) {
-        console.log(error.response.data);
         setErrorMessage(error.response.data.error);
       }
     };
 
     const getContacts = () => {
-       const CLIENT_ID =
-         "133522538881-2j9114vn23tf58143tvn348mivgeaqjr.apps.googleusercontent.com";
-       const API_KEY = "AIzaSyBuI1lYP5WFHFOOQ8y55x4AjHiafJuXSho";
-       const DISCOVERY_DOC =
-         "https://www.googleapis.com/discovery/v1/apis/people/v1/rest";
-       const SCOPES = "https://www.googleapis.com/auth/contacts.readonly";
+      const CLIENT_ID =
+        "133522538881-2j9114vn23tf58143tvn348mivgeaqjr.apps.googleusercontent.com";
+      const API_KEY = "AIzaSyBuI1lYP5WFHFOOQ8y55x4AjHiafJuXSho";
+      const DISCOVERY_DOC =
+        "https://www.googleapis.com/discovery/v1/apis/people/v1/rest";
+      const SCOPES = "https://www.googleapis.com/auth/contacts.readonly";
 
-       let tokenClient;
-       let gapiInited = false;
-       let gisInited = false;
+      let tokenClient;
+      let gapiInited = false;
+      let gisInited = false;
 
-       document.getElementById("authorize_button").style.visibility = "hidden";
-       document.getElementById("signout_button").style.visibility = "hidden";
+      document.getElementById("authorize_button").style.visibility = "hidden";
+      document.getElementById("signout_button").style.visibility = "hidden";
 
-       const scriptGapi = document.createElement("script");
-       scriptGapi.src = "https://apis.google.com/js/api.js";
-       scriptGapi.async = true;
-       scriptGapi.defer = true;
-       scriptGapi.onload = () => {
-         window.gapi.load("client", initializeGapiClient);
-       };
-       document.body.appendChild(scriptGapi);
-       const scriptGis = document.createElement("script");
-       scriptGis.src = "https://accounts.google.com/gsi/client";
-       scriptGis.async = true;
-       scriptGis.defer = true;
-       scriptGis.onload = gisLoaded;
-       document.body.appendChild(scriptGis);
+      const scriptGapi = document.createElement("script");
+      scriptGapi.src = "https://apis.google.com/js/api.js";
+      scriptGapi.async = true;
+      scriptGapi.defer = true;
+      scriptGapi.onload = () => {
+        window.gapi.load("client", initializeGapiClient);
+      };
+      document.body.appendChild(scriptGapi);
+      const scriptGis = document.createElement("script");
+      scriptGis.src = "https://accounts.google.com/gsi/client";
+      scriptGis.async = true;
+      scriptGis.defer = true;
+      scriptGis.onload = gisLoaded;
+      document.body.appendChild(scriptGis);
 
-       // Functions from the original HTML code
-       async function initializeGapiClient() {
-         await window.gapi.client.init({
-           apiKey: API_KEY,
-           discoveryDocs: [DISCOVERY_DOC],
-         });
-         gapiInited = true;
-         maybeEnableButtons();
-       }
+      // Functions from the original HTML code
+      async function initializeGapiClient() {
+        await window.gapi.client.init({
+          apiKey: API_KEY,
+          discoveryDocs: [DISCOVERY_DOC],
+        });
+        gapiInited = true;
+        maybeEnableButtons();
+      }
 
-       function gisLoaded() {
-         tokenClient = window.google.accounts.oauth2.initTokenClient({
-           client_id: CLIENT_ID,
-           scope: SCOPES,
-           callback: "", // defined later
-         });
-         gisInited = true;
-         maybeEnableButtons();
-       }
+      function gisLoaded() {
+        tokenClient = window.google.accounts.oauth2.initTokenClient({
+          client_id: CLIENT_ID,
+          scope: SCOPES,
+          callback: "", // defined later
+        });
+        gisInited = true;
+        maybeEnableButtons();
+      }
 
-       function maybeEnableButtons() {
-         if (gapiInited && gisInited) {
-           document.getElementById("authorize_button").style.visibility =
-             "visible";
-         }
-       }
+      function maybeEnableButtons() {
+        if (gapiInited && gisInited) {
+          document.getElementById("authorize_button").style.visibility =
+            "visible";
+        }
+      }
 
-       window.handleAuthClick = () => {
-         tokenClient.callback = async (resp) => {
-           if (resp.error !== undefined) {
-             throw resp;
-           }
-           document.getElementById("signout_button").style.visibility =
-             "visible";
-           document.getElementById("authorize_button").innerText = "Refresh";
-           await listConnectionNames();
-         };
+      window.handleAuthClick = () => {
+        tokenClient.callback = async (resp) => {
+          if (resp.error !== undefined) {
+            throw resp;
+          }
+          document.getElementById("signout_button").style.visibility =
+            "visible";
+          document.getElementById("authorize_button").innerText = "Refresh";
+          await listConnectionNames();
+        };
 
-         if (window.gapi.client.getToken() === null) {
-           tokenClient.requestAccessToken({ prompt: "consent" });
-         } else {
-           tokenClient.requestAccessToken({ prompt: "" });
-         }
-       };
+        if (window.gapi.client.getToken() === null) {
+          tokenClient.requestAccessToken({ prompt: "consent" });
+        } else {
+          tokenClient.requestAccessToken({ prompt: "" });
+        }
+      };
 
-       window.handleSignoutClick = () => {
-         const token = window.gapi.client.getToken();
-         if (token !== null) {
-           window.google.accounts.oauth2.revoke(token.access_token);
-           window.gapi.client.setToken("");
-           document.getElementById("content").innerText = "";
-           document.getElementById("authorize_button").innerText = "Authorize";
-           document.getElementById("signout_button").style.visibility =
-             "hidden";
-         }
-       };
-
-
-    }
+      window.handleSignoutClick = () => {
+        const token = window.gapi.client.getToken();
+        if (token !== null) {
+          window.google.accounts.oauth2.revoke(token.access_token);
+          window.gapi.client.setToken("");
+          document.getElementById("content").innerText = "";
+          document.getElementById("authorize_button").innerText = "Authorize";
+          document.getElementById("signout_button").style.visibility = "hidden";
+        }
+      };
+    };
     fetchUser();
     getContacts();
     listConnectionNames();
@@ -238,13 +234,11 @@ const InputTransactions = () => {
         personFields: "names,emailAddresses,phoneNumbers,addresses",
       });
     } catch (err) {
-      console.error(err.message);
       return;
     }
     const connections = response.result.connections;
-    console.log(connections);
+
     if (!connections || connections.length === 0) {
-      console.log("No connections found.");
       return;
     }
     const contactData = connections.map((person) => {
@@ -273,15 +267,15 @@ const InputTransactions = () => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-     if (formValues.mls_vendor === "Select MLS Vendor") {
-       setErrorMessage("Please select an MLS Vendor");
-       return;
+    if (formValues.mls_vendor === "Select MLS Vendor") {
+      setErrorMessage("Please select an MLS Vendor");
+      return;
     }
-     if (formValues.state === "Select State") {
-       setErrorMessage("Please select a state");
-       return;
-     }
-    
+    if (formValues.state === "Select State") {
+      setErrorMessage("Please select a state");
+      return;
+    }
+
     const form = event.currentTarget;
     if (form.checkValidity() === false) {
       event.preventDefault();
@@ -299,7 +293,6 @@ const InputTransactions = () => {
       data: formValues,
     })
       .then((response) => {
-        console.log(response.data);
         // Reset formValues
         setFormValues({
           mls_vendor: "",
@@ -341,8 +334,6 @@ const InputTransactions = () => {
         history.push("/dashboard");
       })
       .catch((error) => {
-        console.log(error);
-        console.log(formValues);
         setErrorMessage(error.response.data.error);
         setSuccessMessage("");
       });
@@ -352,6 +343,34 @@ const InputTransactions = () => {
       ...formValues,
       buyer_agent_email: email,
       buyer_agent_name: name,
+    });
+  };
+  const handlePlaceSelected = (place) => {
+    const addressComponents = place.address_components;
+    const streetNumber = addressComponents.find((component) =>
+      component.types.includes("street_number")
+    );
+    const streetName = addressComponents.find((component) =>
+      component.types.includes("route")
+    );
+    const city = addressComponents.find((component) =>
+      component.types.includes("locality")
+    );
+    const state = addressComponents.find((component) =>
+      component.types.includes("administrative_area_level_1")
+    );
+    const zipCode = addressComponents.find((component) =>
+      component.types.includes("postal_code")
+    );
+
+    setFormValues({
+      ...formValues,
+      street_address: `${streetNumber ? streetNumber.long_name : ""} ${
+        streetName ? streetName.long_name : ""
+      }`,
+      city: city ? city.long_name : "",
+      state: state ? state.short_name : "",
+      zip_code: zipCode ? zipCode.long_name : "",
     });
   };
 
@@ -427,14 +446,7 @@ const InputTransactions = () => {
           className="mt-2 mb-2"
         >
           <Form.Label>Street Address</Form.Label>
-          <Form.Control
-            required
-            type="text"
-            placeholder="Street Address"
-            value={formValues.street_address}
-            name="street_address"
-            onChange={handleChange}
-          />
+          <GoogleMapAutocomplete onPlaceSelected={handlePlaceSelected} />
           <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
         </Form.Group>
 
@@ -445,38 +457,23 @@ const InputTransactions = () => {
           className="mt-2 mb-2"
         >
           <Form.Label>City</Form.Label>
-          <Form.Control
-            type="text"
-            placeholder="City"
-            value={formValues.city}
-            name="city"
-            onChange={handleChange}
-            required
-          />
+          <GoogleMapAutocomplete onPlaceSelected={handlePlaceSelected} />
           <Form.Control.Feedback type="invalid">
             Please provide a valid city.
           </Form.Control.Feedback>
         </Form.Group>
-        <Form.Group as={Col} md="3" name="state">
+
+        <Form.Group
+          as={Col}
+          md="3"
+          controlId="validationCustom03"
+          className="mt-2 mb-2"
+        >
           <Form.Label>State</Form.Label>
-          <Form.Select
-            onChange={handleChange}
-            className="mt-2 mb-2"
-            value={formValues.state}
-            name="state"
-          >
-            <option>Select State</option>
-            {statenames.map((state, index) => (
-              <option key={index} value={state}>
-                {state}
-              </option>
-            ))}
-          </Form.Select>
-          {errorMessage && (
-            <div style={{ color: "red" }} className="error-message">
-              {errorMessage}
-            </div>
-          )}
+          <GoogleMapAutocomplete onPlaceSelected={handlePlaceSelected} />
+          <Form.Control.Feedback type="invalid">
+            Please provide a valid city.
+          </Form.Control.Feedback>
         </Form.Group>
         <Form.Group
           as={Col}
@@ -485,14 +482,7 @@ const InputTransactions = () => {
           className="mt-2 mb-2"
         >
           <Form.Label>Zip Code</Form.Label>
-          <Form.Control
-            required
-            type="text"
-            placeholder="Zip Code"
-            value={formValues.zip_code}
-            name="zip_code"
-            onChange={handleChange}
-          />
+          <GoogleMapAutocomplete onPlaceSelected={handlePlaceSelected} />
           <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
         </Form.Group>
       </Row>
@@ -846,7 +836,6 @@ const InputTransactions = () => {
         </Form.Group>
       </Row>
 
-     
       <Row className="mb-3 ">
         <div>
           <Form.Label className="text font-weight-bold">
@@ -1139,7 +1128,7 @@ const InputTransactions = () => {
 
         <pre id="content" style={{ whiteSpace: "pre-wrap" }}></pre>
       </div>
-     
+
       {transactionForm()}
     </Layout>
   );

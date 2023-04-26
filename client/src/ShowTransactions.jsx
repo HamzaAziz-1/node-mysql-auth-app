@@ -33,7 +33,7 @@ const token = isAuthenticated().token;
           },
         })
       .then((res) => {
-        console.log(res.data);
+        
         setTransactions(transactions.filter((t) => t.id !== id));
       })
       .catch((err) => console.log(err));
