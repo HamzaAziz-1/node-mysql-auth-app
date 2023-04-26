@@ -112,6 +112,7 @@ const InputTransactions = () => {
       ...formValues,
       [event.target.name]: event.target.value,
     });
+    
   };
   const token = isAuthenticated().token;
 
@@ -365,7 +366,7 @@ const InputTransactions = () => {
 
    setFormValues({
      ...formValues,
-     street_address: `${streetNumber ? streetNumber.long_name : ""} ${
+     street_address: `${streetNumber ? streetNumber.long_name + " " : ""}${
        streetName ? streetName.long_name : ""
      }`,
      city: city ? city.long_name : "",
@@ -373,6 +374,7 @@ const InputTransactions = () => {
      zip_code: zipCode ? zipCode.long_name : "",
    });
   };
+  
   
 
 
@@ -449,7 +451,12 @@ const InputTransactions = () => {
           className="mt-2 mb-2"
         >
           <Form.Label>Street Address</Form.Label>
-          <GoogleMapAutocomplete onPlaceSelected={handlePlaceSelected} />
+          <GoogleMapAutocomplete
+            onPlaceSelected={handlePlaceSelected}
+            defaultValue={formValues.street_address}
+            addressComponent="street_number"
+          />
+
           <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
         </Form.Group>
 
@@ -463,8 +470,9 @@ const InputTransactions = () => {
           <GoogleMapAutocomplete
             onPlaceSelected={handlePlaceSelected}
             defaultValue={formValues.city}
-            
+            addressComponent="locality"
           />
+
           <Form.Control.Feedback type="invalid">
             Please provide a valid city.
           </Form.Control.Feedback>
@@ -477,9 +485,12 @@ const InputTransactions = () => {
           className="mt-2 mb-2"
         >
           <Form.Label>State</Form.Label>
-          <GoogleMapAutocomplete onPlaceSelected={handlePlaceSelected}
-          defaultValue={formValues.state}
+          <GoogleMapAutocomplete
+            onPlaceSelected={handlePlaceSelected}
+            defaultValue={formValues.state}
+            addressComponent="administrative_area_level_1"
           />
+
           <Form.Control.Feedback type="invalid">
             Please provide a valid city.
           </Form.Control.Feedback>
@@ -491,9 +502,12 @@ const InputTransactions = () => {
           className="mt-2 mb-2"
         >
           <Form.Label>Zip Code</Form.Label>
-          <GoogleMapAutocomplete onPlaceSelected={handlePlaceSelected}
+          <GoogleMapAutocomplete
+            onPlaceSelected={handlePlaceSelected}
             defaultValue={formValues.zip_code}
+            addressComponent="postal_code"
           />
+
           <Form.Control.Feedback>Looks good!</Form.Control.Feedback>
         </Form.Group>
       </Row>

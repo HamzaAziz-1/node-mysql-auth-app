@@ -114,6 +114,14 @@ const UpdateTransactions = () => {
     });
     console.log(formValues);
   };
+  const handleDateChange = (event) => {
+    const value = event.target.value.toString().slice(0, 10);
+    setFormValues({
+      ...formValues,
+      [event.target.name]: value,
+    });
+    console.log(formValues);
+  };
   const token = isAuthenticated().token;
   useEffect(() => {
     // Fetch the current user's information and update the form fields
@@ -190,35 +198,35 @@ const UpdateTransactions = () => {
       buyer_agent_name: name,
     });
   };
- const handlePlaceSelected = (place) => {
-   const addressComponents = place.address_components;
-   const streetNumber = addressComponents.find((component) =>
-     component.types.includes("street_number")
-   );
-   const streetName = addressComponents.find((component) =>
-     component.types.includes("route")
-   );
-   const city = addressComponents.find((component) =>
-     component.types.includes("locality")
-   );
-   const state = addressComponents.find((component) =>
-     component.types.includes("administrative_area_level_1")
-   );
-   const zipCode = addressComponents.find((component) =>
-     component.types.includes("postal_code")
-   );
+const handlePlaceSelected = (place) => {
+  const addressComponents = place.address_components;
+  const streetNumber = addressComponents.find((component) =>
+    component.types.includes("street_number")
+  );
+  const streetName = addressComponents.find((component) =>
+    component.types.includes("route")
+  );
+  const city = addressComponents.find((component) =>
+    component.types.includes("locality")
+  );
+  const state = addressComponents.find((component) =>
+    component.types.includes("administrative_area_level_1")
+  );
+  const zipCode = addressComponents.find((component) =>
+    component.types.includes("postal_code")
+  );
 
-   setFormValues({
-     ...formValues,
-     street_address: `${streetNumber ? streetNumber.long_name : ""} ${
-       streetName ? streetName.long_name : ""
-     }`,
-     city: city ? city.long_name : "",
-     state: state ? state.short_name : "",
-     zip_code: zipCode ? zipCode.long_name : "",
-   });
- };
-  
+  setFormValues({
+    ...formValues,
+    street_address: `${streetNumber ? streetNumber.long_name + " " : ""}${
+      streetName ? streetName.long_name : ""
+    }`,
+    city: city ? city.long_name : "",
+    state: state ? state.short_name : "",
+    zip_code: zipCode ? zipCode.long_name : "",
+  });
+};
+
 
   const transactionForm = () => (
     <Form noValidate validated={validated} onSubmit={handleSubmit}>

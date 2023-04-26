@@ -264,6 +264,7 @@ router.put("/update/:id", verifyToken, (req, res) => {
     10
   );
   
+  
   const sql = `UPDATE transaction SET 
                 mls_vendor = ?,
                 mls_number = ?,

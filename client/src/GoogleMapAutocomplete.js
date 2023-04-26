@@ -1,10 +1,15 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Autocomplete } from "@react-google-maps/api";
 import Form from "react-bootstrap/Form";
 
-const GoogleMapAutocomplete = ({ onPlaceSelected,defaultValue }) => {
+const GoogleMapAutocomplete = ({
+  onPlaceSelected,
+  defaultValue,
+  addressComponent,
+}) => {
   const [autocomplete, setAutocomplete] = useState(null);
   const [apiReady, setApiReady] = useState(false);
+  const [inputValue, setInputValue] = useState(defaultValue);
 
   useEffect(() => {
     let intervalId;
@@ -27,29 +32,53 @@ const GoogleMapAutocomplete = ({ onPlaceSelected,defaultValue }) => {
     };
   }, [apiReady]);
 
+  useEffect(() => {
+    setInputValue(defaultValue);
+  }, [defaultValue]);
+
   const onLoad = (autoC) => {
     setAutocomplete(autoC);
   };
 
   const onPlaceChanged = () => {
     if (autocomplete !== null) {
-      onPlaceSelected(autocomplete.getPlace());
+      const place = autocomplete.getPlace();
+
+      let desiredAddressValue = "";
+      if (addressComponent === "street_number_and_route") {
+        const streetNumber = place.address_components.find((component) =>
+          component.types.includes("street_number")
+        );
+        const streetName = place.address_components.find((component) =>
+          component.types.includes("route")
+        );
+        desiredAddressValue = `${streetNumber ? streetNumber.long_name : ""} ${
+          streetName ? streetName.long_name : ""
+        }`.trim();
+      } else {
+        const desiredAddressComponent = place.address_components.find(
+          (component) => component.types.includes(addressComponent)
+        );
+        desiredAddressValue = desiredAddressComponent
+          ? desiredAddressComponent.long_name
+          : "";
+      }
+
+      setInputValue(desiredAddressValue);
+      onPlaceSelected(place);
     } else {
       console.log("Autocomplete is not loaded yet!");
     }
   };
 
   return (
-    <Autocomplete
-      onLoad={onLoad}
-      onPlaceChanged={onPlaceChanged}
-      defaultValue={defaultValue}
-    >
+    <Autocomplete onLoad={onLoad} onPlaceChanged={onPlaceChanged}>
       <Form.Control
         required
         type="text"
         placeholder="Enter the Location"
-        defaultValue={defaultValue}
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
       />
     </Autocomplete>
   );
