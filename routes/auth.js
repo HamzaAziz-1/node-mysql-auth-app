@@ -5,10 +5,15 @@ const jwt = require("jsonwebtoken");
 const router = express.Router();
 const { checkAuth } = require("../middlewares/auth.js");
 const { OAuth2Client } = require("google-auth-library");
+const { createHash,
+  sendResetPasswordEmail }
+  = require('../middlewares');
+  const crypto = require("crypto");
 
 const googleClientId =
   "133522538881-2j9114vn23tf58143tvn348mivgeaqjr.apps.googleusercontent.com";
 const googleClient = new OAuth2Client(googleClientId);
+const sendEmail = require('../middlewares/sendEmail')
 
 
 // create connection to mysql database
@@ -244,6 +249,98 @@ router.get("/user", verifyToken, function (req, res) {
       }
     }
   );
+});
+
+router.post("/reset-password", async function (req, res) {
+   const { token, email, password } = req.body;
+
+   if (!token || !email || !password) {
+     return res.status(400).json({ error: "Please provide all values" });
+   }
+
+   connection.query(
+     "SELECT * FROM users WHERE email = ?",
+     [email],
+     function (error, results, fields) {
+       if (error) throw error;
+
+       if (results.length > 0) {
+         const user = results[0];
+
+
+         if (
+           user.passwordToken === createHash(token)) {
+           bcrypt.hash(password, 10, function (err, hash) {
+             if (err) throw err;
+             connection.query(
+               "UPDATE users SET password = ?, passwordToken = ? WHERE email = ?",
+               [hash, null, email],
+               function (error, results, fields) {
+                 if (error) throw error;
+                sendEmail({
+                  to: email,
+                  subject: "Reset Password",
+                  html: `<h4>Hello, 
+                  "Password reset Successfully"
+                  </h4>
+   `,
+                });
+                 res.status(200).json({ message: "Password reset successful" });
+               }
+             );
+           });
+         } else {
+           
+           res.status(400).json({ error: "Invalid token or token expired" });
+         }
+       } else {
+         res.status(404).json({ error: "User not found" });
+       }
+     }
+   );
+  });
+router.post("/forgot-password", async function (req, res) {
+   const { email } = req.body;
+
+   if (!email) {
+     return res.status(400).json({ error: "Please provide valid email" });
+   }
+
+   connection.query(
+     "SELECT * FROM users WHERE email = ?",
+     [email],
+     function (error, results, fields) {
+       if (error) throw error;
+
+       if (results.length > 0) {
+         const user = results[0];
+         const passwordToken = crypto.randomBytes(70).toString("hex");
+
+        connection.query(
+          "UPDATE users SET passwordToken = ? WHERE email = ?",
+          [createHash(passwordToken), email],
+          async function (error, results, fields) {
+            if (error) throw error;
+
+            // send email
+            const origin = "http://staging-2023-03-30.pivottinc.com:3000";
+            await sendResetPasswordEmail({
+              name: user.name,
+              email: user.email,
+              token: passwordToken,
+              origin,
+            });
+
+            res.status(200).json({
+              msg: "Please check your email for reset password link",
+            });
+          }
+        );
+       } else {
+         res.status(404).json({ error: "User not found" });
+       }
+     }
+   );
 });
 
 
