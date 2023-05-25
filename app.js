@@ -4,10 +4,12 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const bodyParser = require("body-parser");
 const morgan = require("morgan");
+const mongoose = require("mongoose");
 const dotenv = require("dotenv").config();
 const cookieParser = require("cookie-parser");
 const authRoutes = require("./routes/auth");
 const transactionRoutes = require("./routes/transactions");
+const templateRoutes = require("./routes/templateRoutes");
 const cors = require("cors");
 const app = express();
 
@@ -25,7 +27,18 @@ app.use(
     credentials: true,
   })
 );
+// Create a connection to the MongoDB database
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
+// Check if the connection is successful
+const db = mongoose.connection;
+db.on("error", console.error.bind(console, "MongoDB connection error:"));
+db.once("open", () => {
+  console.log("Connected to MongoDB");
+});
 
 // create connection to mysql database
 const connection = mysql.createConnection({
@@ -85,7 +98,7 @@ connection.connect(function (err) {
 // routes
 app.use("/auth", authRoutes);
 app.use("/transaction", transactionRoutes);
-
+app.use("/templates", templateRoutes);
 
 // start server
 app.listen(port, () => {
