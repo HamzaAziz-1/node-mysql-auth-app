@@ -350,6 +350,32 @@ router.put("/update/:id", verifyToken, (req, res) => {
   });
 });
 
+router.patch("/update/:id", verifyToken, async (req, res) => {
+  const { id } = req.params;
+  const userId = req.userId;
+  const updateFields = req.body;
+
+  const sql = `UPDATE transaction SET ? WHERE id = ? AND user_id = ?`;
+
+  const values = [updateFields, id, userId];
+
+  // await saveUserEvent(
+  //   "Updated",
+  //   userId,
+  //   updateFields.buyer_name,
+  //   updateFields.street_address
+  // );
+
+  connection.query(sql, values, (err, result) => {
+    if (err) {
+      return res.status(400).json({ err });
+    } else if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Transaction not found" });
+    } else {
+      return res.status(200).json("Transaction updated successfully");
+    }
+  });
+});
 
 router.delete("/delete/:id",verifyToken, (req, res) => {
  const transactionId = req.params.id;
